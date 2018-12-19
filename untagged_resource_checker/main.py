@@ -23,13 +23,12 @@ def get_untagged_instances_by_region(region):
     for i in instances:
         if not any(key in tag_keys for key in [t['Key'] for t in i.tags]):
             print(i.instance_id)
-            untagged_instances.append(i.instance_id)
+            untagged_instances.append({'instance_id': i.instance_id, 'region_name': region})
 
-    #TODO: add region name to returned data to enable termination + easier finding and tagging of resource
     return untagged_instances
 
 def notify_slack(instance_ids):
-    instance_ids = '\n'.join(instance_ids)
+    instance_ids = '\n'.join(i["instance_id"] + " in " + i["region_name"]  for i in instance_ids)
     payload = f"{{'text' : 'The following instance_ids are untagged: ```{instance_ids}```'}}"
     r = post(slack_webhook, data=payload, headers={'Content-Type': 'application/json'})
 

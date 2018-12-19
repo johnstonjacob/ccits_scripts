@@ -4,7 +4,7 @@ from os import environ
 
 slack_webhook = environ["SLACK_WEBHOOK"]
 
-# accept input / pull list of accepted tags from elsewhere
+# TODO: accept input / pull list of accepted tags from elsewhere
 tag_keys = ['ce_name', 'test_tag']
 
 print(tag_keys)
@@ -35,6 +35,10 @@ def notify_slack(instance_ids):
     if r.status_code != 200:
         print(f'Slack webhook request error code {r.status_code}, the response is {r.text}')
 
+#TODO: this function
+def terminate_instance(instance_id):
+    print("TODO:")
+
 
 def main():
     regions = get_regions()
@@ -44,9 +48,9 @@ def main():
         print(f'Checking {r} for untagged instances..')
         untagged_instances += get_untagged_instances_by_region(r)
 
-    # ask what to do with these instances (notify, terminate, etc)
-    print(untagged_instances)
+    # TODO: ask what to do with these instances (notify, terminate, etc)
     notify_slack(untagged_instances)
+    print(untagged_instances)
     print("Done")
 
 if __name__ == "__main__":

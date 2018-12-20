@@ -1,11 +1,12 @@
-import boto3
 from requests import post 
 from os import environ
 
-slack_webhook = environ["SLACK_WEBHOOK"]
+import boto3
 
 # TODO: accept input / pull list of accepted tags from elsewhere
 tag_keys = ['ce_name', 'test_tag']
+
+slack_webhook = environ["SLACK_WEBHOOK"]
 
 print(tag_keys)
 
@@ -35,10 +36,25 @@ def notify_slack(instance_ids):
     if r.status_code != 200:
         print(f'Slack webhook request error code {r.status_code}, the response is {r.text}')
 
-#TODO: this function
-def terminate_instance(instance_id):
-    print("TODO:")
+def group_instances_by_region(instances):
+    instances_by_region = {}
+    for instance in instances:
+        instance_id = instance['instance_id']
+        region = instance['region_name']
+        if region not in instances_by_region:
+            instances_by_region[region] = [instance_id]
+        else:
+            instances_by_region[region].append(instance_id) 
 
+    return instances_by_region
+
+def shut_down_instances_by_region(instances_by_region):
+    for region, instances in instances_by_region.items():
+        ec2_client = boto3.client('ec2', region_name=region)
+        print(f'Shutting down untagged instances in {region}')
+
+        res = ec2_client.stop_instances(InstanceIds=instances, DryRun=True)
+        print('Result for {region}: {res}')
 
 def main():
     regions = get_regions()
@@ -48,9 +64,8 @@ def main():
         print(f'Checking {r} for untagged instances..')
         untagged_instances += get_untagged_instances_by_region(r)
 
-    # TODO: ask what to do with these instances (notify, terminate, etc)
     notify_slack(untagged_instances)
-    print(untagged_instances)
+    shut_down_instances_by_region(group_instances_by_region(untagged_instances))
     print("Done")
 
 if __name__ == "__main__":

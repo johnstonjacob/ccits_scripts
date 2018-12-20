@@ -23,8 +23,9 @@ def get_untagged_instances_by_region(region):
 
     for i in instances:
         if not any(key in tag_keys for key in [t['Key'] for t in i.tags]):
-            print(i.instance_id)
-            untagged_instances.append({'instance_id': i.instance_id, 'region_name': region})
+            if i['state']['Code'] == 16:
+                print(i.instance_id)
+                untagged_instances.append({'instance_id': i.instance_id, 'region_name': region})
 
     return untagged_instances
 
